@@ -1,77 +1,78 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import React from "react";
-import { Box, CssBaseline } from '@mui/material';
-import Sidebar from '../components/Sidebar';
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import React, { useState } from "react";
+import { Box, CssBaseline, Grid, Pagination, Stack } from "@mui/material";
+import Sidebar from "../components/Sidebar";
+import Singlecard from "../components/Singlecard";
+import { exerciseOptions } from "../utils/fetchApi";
 
+export default function Home(props) {
+  const { data } = props;
+  //pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [exercisesPerPage] = useState(6);
 
-export default function Home() {
+  const indexOfLastExercise = currentPage * exercisesPerPage;
+  const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
+  const currentExercises = data.slice(
+    indexOfFirstExercise,
+    indexOfLastExercise
+  );
+
+  const paginate = (event,value) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: 1800, behavior: 'smooth' });
+  };
 
   return (
-<>
-
-    <Sidebar/> 
-    <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-  
-    <div className={styles.container}>
-     
-      
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+    <>
+      <Sidebar />
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }} mt="50px" ml="50px">
+        <Stack
+          direction="row"
+          sx={{ gap: { lg: "50px", xs: "50px" } }}
+          flexWrap="wrap"
+          justifyContent="center"
         >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
-    </div>
-    </Box>
-    </>    
-  )
+          {currentExercises.map((exercise, id) => (
+            <Grid item md={3} key={exercise.name}>
+              <Singlecard key={id} exercise={exercise} />
+            </Grid>
+          ))}
+        </Stack>
+      </Box>
+      <Pagination
+      defaultPage={1}
+      page={currentPage}
+      onChange={paginate}
+      size="large"
+      shape="rounded"
+      showFirstButton showLastButton
+      sx={{background:"#333",margin:"50px",borderRadius:"8px",paddingLeft:"250px"}}
+      count={Math.ceil(data.length / exercisesPerPage)}
+
+      />
+    </>
+  );
+}
+
+export async function getStaticProps() {
+  try {
+    const res = await fetch(
+      `https://exercisedb.p.rapidapi.com/exercises`,
+      exerciseOptions
+    );
+
+    const data = await res.json();
+    console.log(data);
+
+    return {
+      props: {
+        data,
+      },
+    };
+  } catch (error) {
+    console.log(error);
+  }
 }
